@@ -1,181 +1,90 @@
-import React, {useState} from 'react';
-import Axios from 'axios';
+import "./App.css";
+import { BrowserRouter as Router, Route, Switch, Link } from "react-router-dom";
+//import Home from "./pages/Home";
+//import CreatePost from "./pages/CreatePost";
+//import Post from "./pages/Post";
+//import Registration from "./pages/Registration";
+import Login from "./pages/login";
+import Test from "./pages/test";
+//import PageNotFound from "./pages/PageNotFound";
+//import Profile from "./pages/Profile";
+//import ChangePassword from "./pages/ChangePassword";
 
-import 'bootstrap/dist/css/bootstrap.min.css';
-import { Form, Button, Col, Row, Container, Card} from 'react-bootstrap';
-import './App.css';
+import { AuthContext } from "./pages/AuthContext";
+import { useState, useEffect } from "react";
+import axios from "axios";
 
 function App() {
+  const [authState, setAuthState] = useState({
+    username: "",
+    id: 0,
+    status: false,
+  });
 
-  const [email, setemail] = useState('')
-  const [fullname, setfullname,] = useState('')
-  const [age, setAge] = useState('')
-  const [gender, setGender] = useState('')
-  const [address, setAddress] = useState('')
-  const [postcode, setPostCode,] = useState('')
-  const [ttncode, setTtnCode] = useState('')
-  const [testresult, setTestResult] = useState('')
+  useEffect(() => {
+    axios
+      .get("https://full-stack-api-pedrotech.herokuapp.com/auth/auth", {
+        headers: {
+          accessToken: localStorage.getItem("accessToken"),
+        },
+      })
+      .then((response) => {
+        if (response.data.error) {
+          setAuthState({ ...authState, status: false });
+        } else {
+          setAuthState({
+            username: response.data.username,
+            id: response.data.id,
+            status: true,
+          });
+        }
+      });
+  }, []);
 
-  const submit =()=>{
-    Axios.post('http://localhost:3000/result', {
-      email: email, 
-      fullname: fullname,
-      age: age,
-      gender: gender,
-      address: address,
-      postcode: postcode,
-      ttncode: ttncode,
-      testresult: testresult
-    }).then((response) =>{
-      console.log(response);
-    })
+  const logout = () => {
+    localStorage.removeItem("accessToken");
+    setAuthState({ username: "", id: 0, status: false });
   };
 
-
   return (
-
     <div className="App">
-<Container>
-<Card className = "cardz" >
-  <Card.Header>MYCOVTEST HUB</Card.Header>
-  <Card.Body style={{ width: '35rem'}}>
-    <Card.Title><h2>Enter your test result details</h2></Card.Title>
-    
-
-    
-      {/* <Row >
-        <p>Enter Test Results</p>
-      </Row> */}
-      
-      <Form>
-  <Form.Group controlId="formBasicEmail">
-    <Form.Label>Email address</Form.Label>
-    <Form.Control type="email" placeholder="enter your email" onChange={(e)=>{
-      setemail(e.target.value);
-    }}/>
-  </Form.Group>
-
-  <Form.Group controlId="fullname">
-    <Form.Label>Full Name</Form.Label>
-    <Form.Control type="text" placeholder="enter your full names" onChange={(e)=>{
-      setfullname(e.target.value);
-    }}/>
-  </Form.Group>
-
-  <Form.Group controlId="age">
-    <Form.Label>Age</Form.Label>
-    <Form.Control type="text" placeholder="entert your age" onChange={(e)=>{
-      setAge(e.target.value);
-    }}/>
-  </Form.Group>
-
-  <Form.Group controlId="gender">
-    <Form.Label>Gender</Form.Label>
-    <Form.Control as="select" placeholder ="enter gender" onChange={(e)=>{
-      setGender(e.target.value);
-    }}>
-      <option>female</option>
-      <option>male</option>
-      <option>other</option>
-    </Form.Control>
-  </Form.Group>
-
-  <Form.Group controlId="address">
-    <Form.Label>Address</Form.Label>
-    <Form.Control type="text" placeholder="enter your address" onChange={(e)=>{
-      setAddress(e.target.value);
-    }}/>
-  </Form.Group>
-
-  <Form.Group controlId="postcode">
-    <Form.Label>Post Code</Form.Label>
-    <Form.Control type="text" placeholder="enter post code" onChange={(e)=>{
-      setPostCode(e.target.value);
-    }}/>
-  </Form.Group>
-
-  <Form.Group controlId="ttncode">
-    <Form.Label>TTN Code</Form.Label>
-    <Form.Control type="text" placeholder="Enter TTN Code" onChange={(e)=>{
-      setTtnCode(e.target.value);
-    }}/>
-  </Form.Group>
-
-  <Form.Group controlId="testresults">
-    <Form.Label>Test Results</Form.Label>
-    <Form.Control as="select" placeholder="enter test results" onChange={(e)=>{
-      setTestResult(e.target.value);
-    }}>
-      <option>Positive</option>
-      <option>Negative</option>
-      <option>Inconclusive</option>
-    </Form.Control>
-  </Form.Group>
-
-  
-  <Button variant="primary" type="submit" onClick={submit}>
-    Submit
-  </Button>
-</Form>
-
-  </Card.Body>
-</Card>
-</Container>
-
-    
+      <AuthContext.Provider value={{ authState, setAuthState }}>
+        <Router>
+          <div className="navbar">
+            <div className="links">
+              {!authState.status ? (
+                <>
+                  <Link to="/login"> Login</Link>
+                  <Link to="/registration"> Registration</Link>
+                  <Link to="/test"> Add Test Results</Link>
+                </>
+              ) : (
+                <>
+                  <Link to="/"> Home Page</Link>
+                  <Link to="/createpost"> Create A Post</Link>
+                </>
+              )}
+            </div>
+            <div className="loggedInContainer">
+              <h1>{authState.username} </h1>
+              {authState.status && <button onClick={logout}> Logout</button>}
+            </div>
+          </div>
+          <Switch>
+            {/* <Route path="/" exact component={Home} />
+            <Route path="/createpost" exact component={CreatePost} />
+            <Route path="/post/:id" exact component={Post} />
+            <Route path="/registration" exact component={Registration} /> */}
+            <Route path="/login" exact component={Login} />
+            <Route path="/test" exact component={Test} />
+            {/* <Route path="/profile/:id" exact component={Profile} />
+            <Route path="/changepassword" exact component={ChangePassword} />
+            <Route path="*" exact component={PageNotFound} /> */}
+          </Switch>
+        </Router>
+      </AuthContext.Provider>
     </div>
   );
 }
-
-
-//     <div className="App">
-//       <div className="registration">
-//         <h1>Enter Your Details</h1>
-//         <label>email</label>
-//         <input type="text" 
-//          onChange ={(e)=> {
-//           setemail(e.target.value);
-//         }} /> <br />
-//         <label>fullname</label>
-//         <input type="text" 
-//          onChange ={(e)=> {
-//           setfullname(e.target.value);
-//         }} /> <br />
-//         <label>age</label>
-//         <input type="text" 
-//          onChange ={(e)=> {
-//           setAge(e.target.value);
-//         }} /> <br />
-//         <label>gender</label>
-//         <input type="text" 
-//          onChange ={(e)=> {
-//           setGender(e.target.value);
-//         }} /> <br />
-//         <label>address</label>
-//         <input type="text" 
-//          onChange ={(e)=> {
-//           setAddress(e.target.value);
-//         }} /> <br />
-//         <label>postcode</label>
-//         <input type="text" 
-//          onChange ={(e)=> {
-//           setPostCode(e.target.value);
-//         }} /> <br />
-//         <label>ttncode</label>
-//         <input type="text" 
-//          onChange ={(e)=> {
-//           setTtnCode(e.target.value);
-//         }} /> <br />
-//         <label>testresults</label>
-//         <input type="text" 
-//          onChange ={(e)=> {
-//           setTestResult(e.target.value);
-//         }} /> <br />
-//         <button onClick={submit}>Register</button>
-//       </div>
-
-//     </div>
-//   );
-// }
 
 export default App;
